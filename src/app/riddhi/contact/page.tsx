@@ -70,7 +70,7 @@ export default function RiddhiContactPage() {
                 <textarea required rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })}
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-400 resize-none" />
               </div>
-              <button type="submit" className="w-full bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-3 rounded-xl transition-colors">
+              <button type="button" onClick={async (e) => { e.preventDefault(); try { await fetch("/api/contacts", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({property:"riddhi", name:form.name, email:form.email, subject:form.subject, message:form.message}) }); } catch {} setSent(true); }} className="w-full bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-3 rounded-xl transition-colors">
                 Send Message
               </button>
             </form>

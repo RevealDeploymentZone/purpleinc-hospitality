@@ -87,7 +87,7 @@ export default function CheckInPage() {
           </button>
         </div>
 
-        <button onClick={() => setSubmitted(true)} disabled={!idUploaded || !signed}
+        <button onClick={async () => { try { const f2 = form; await fetch("/api/checkins", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({property:"heera",guest_name:f2.name,guest_phone:f2.phone,guest_email:f2.email,id_type:f2.idType,consent:true})}); } catch {} setSubmitted(true); }} disabled={!idUploaded || !signed}
           className="w-full bg-amber-600 hover:bg-amber-700 disabled:bg-gray-300 text-white font-bold py-4 rounded-2xl transition-colors">
           Submit Check-In
         </button>

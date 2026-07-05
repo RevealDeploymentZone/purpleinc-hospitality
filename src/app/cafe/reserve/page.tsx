@@ -14,8 +14,16 @@ export default function ReservePage() {
   const [form, setForm] = useState({ date: "", slot: "", guests: 2, occasion: "", name: "", phone: "" });
   const [step, setStep] = useState(1);
 
-  const handleSubmit = () => {
-    router.push(`/cafe/reserve/confirmation?ref=KC${Date.now().toString().slice(-5)}&slot=${form.slot}&date=${form.date}&guests=${form.guests}&name=${encodeURIComponent(form.name)}`);
+  const handleSubmit = async () => {
+    const ref = `KC-${Date.now().toString().slice(-5)}`;
+    try {
+      await fetch("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ guest_name: form.name, guest_phone: form.phone, date: form.date, time: form.slot, party_size: form.guests, occasion: form.occasion }),
+      });
+    } catch {}
+    router.push(`/cafe/reserve/confirmation?ref=${ref}&slot=${form.slot}&date=${form.date}&guests=${form.guests}&name=${encodeURIComponent(form.name)}`);
   };
 
   return (

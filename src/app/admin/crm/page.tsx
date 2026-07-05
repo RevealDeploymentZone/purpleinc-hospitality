@@ -1,36 +1,81 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import { Search, Users, Star, RotateCcw } from "lucide-react";
+import { Search, Users, Star, RotateCcw, RefreshCw, Phone, Mail, Calendar } from "lucide-react";
 
-const customers = [
-  { name: "Rahul Sharma", phone: "+91 98765 43210", lastVisit: "2025-07-05", properties: ["Heera Grand", "Krystal Cafe"], tags: ["VIP", "Repeat"], visits: 6 },
-  { name: "Priya Verma", phone: "+91 98765 43211", lastVisit: "2025-07-04", properties: ["Riddhi Palace"], tags: ["Repeat"], visits: 3 },
-  { name: "Neha Gupta", phone: "+91 98765 43212", lastVisit: "2025-01-15", properties: ["Krystal Cafe"], tags: ["Regular"], visits: 12 },
-  { name: "Amit Singh", phone: "+91 98765 43213", lastVisit: "2024-12-20", properties: ["Heera Grand"], tags: [], visits: 1 },
-  { name: "Sunita Jain", phone: "+91 98765 43214", lastVisit: "2025-06-30", properties: ["Heera Grand", "Riddhi Palace"], tags: ["VIP", "Repeat"], visits: 8 },
-  { name: "Rohit Mehta", phone: "+91 98765 43215", lastVisit: "2025-05-10", properties: ["Krystal Cafe"], tags: ["Regular"], visits: 5 },
-];
-
-const tagColors: Record<string, string> = {
-  VIP: "bg-amber-500/20 text-amber-400",
-  Repeat: "bg-purple-500/20 text-purple-400",
-  Regular: "bg-blue-500/20 text-blue-400",
+type Guest = {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  property: string;
+  last_visit: string;
+  tags?: string[];
+  notes?: string;
 };
 
-const propertyColors: Record<string, string> = {
-  "Heera Grand": "bg-amber-500/20 text-amber-400",
-  "Riddhi Palace": "bg-blue-500/20 text-blue-400",
-  "Krystal Cafe": "bg-emerald-500/20 text-emerald-400",
+type Booking = {
+  id: string;
+  ref: string;
+  property: string;
+  room_name: string;
+  guest_name: string;
+  guest_phone: string;
+  checkin: string;
+  checkout: string;
+  amount: number;
+  status: string;
+  created_at: string;
+};
+
+const propertyLabel: Record<string, string> = {
+  heera: "Heera Grand",
+  riddhi: "Riddhi Palace",
+  cafe: "Krystal Cafe",
+};
+
+const propertyColor: Record<string, string> = {
+  heera: "bg-amber-500/20 text-amber-400",
+  riddhi: "bg-blue-500/20 text-blue-400",
+  cafe: "bg-emerald-500/20 text-emerald-400",
 };
 
 export default function CRMPage() {
+  const [guests, setGuests] = useState<Guest[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<typeof customers[0] | null>(null);
+  const [selected, setSelected] = useState<Guest | null>(null);
+  const [activeTab, setActiveTab] = useState<"guests" | "bookings">("guests");
 
-  const filtered = customers.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search)
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/crm");
+      const data = await res.json();
+      setGuests(data.guests || []);
+      setBookings(data.bookings || []);
+    } catch {}
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchData(); }, []);
+
+  const filteredGuests = guests.filter((g) =>
+    g.name?.toLowerCase().includes(search.toLowerCase()) ||
+    g.phone?.includes(search) ||
+    g.email?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const filteredBookings = bookings.filter((b) =>
+    b.guest_name?.toLowerCase().includes(search.toLowerCase()) ||
+    b.ref?.includes(search) ||
+    b.guest_phone?.includes(search)
+  );
+
+  const guestBookings = selected
+    ? bookings.filter((b) => b.guest_phone === selected.phone || b.guest_name === selected.name)
+    : [];
 
   return (
     <div className="flex min-h-screen bg-gray-950">
@@ -39,104 +84,174 @@ export default function CRMPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-white">Group CRM</h1>
-            <p className="text-gray-400 text-sm mt-0.5">All customers across all 3 properties</p>
+            <p className="text-gray-400 text-sm mt-0.5">Live data from all 3 properties — Supabase connected</p>
           </div>
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
-            <Users className="w-4 h-4" /> {customers.length} total customers
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-gray-400 text-sm">
+              <Users className="w-4 h-4" /> {guests.length} guests · {bookings.length} bookings
+            </div>
+            <button onClick={fetchData} className="flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm px-3 py-2 rounded-lg transition-colors">
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
+            </button>
           </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-5">
+          {(["guests", "bookings"] as const).map((t) => (
+            <button key={t} onClick={() => setActiveTab(t)} className={`px-4 py-2 rounded-lg text-sm font-semibold capitalize transition-colors ${activeTab === t ? "bg-purple-600 text-white" : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`}>
+              {t === "guests" ? `Guests (${guests.length})` : `Bookings (${bookings.length})`}
+            </button>
+          ))}
         </div>
 
         <div className="flex gap-4 mb-5">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name or phone..."
+            <input value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder={activeTab === "guests" ? "Search by name, phone, email..." : "Search by name, ref, phone..."}
               className="w-full bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:border-purple-500" />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* Customer list */}
-          <div className="lg:col-span-2 bg-gray-800/60 border border-gray-700/50 rounded-2xl overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-700/50">
-                  {["Guest", "Properties", "Tags", "Last Visit", "Visits"].map((h) => (
-                    <th key={h} className="text-left text-gray-400 text-xs font-semibold uppercase tracking-wide py-3 px-4">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-700/30">
-                {filtered.map((c) => (
-                  <tr key={c.name} onClick={() => setSelected(c)} className={`cursor-pointer hover:bg-gray-700/30 transition-all ${selected?.name === c.name ? "bg-purple-600/10" : ""}`}>
-                    <td className="py-3 px-4">
-                      <div className="font-medium text-white text-sm">{c.name}</div>
-                      <div className="text-gray-500 text-xs">{c.phone}</div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex flex-wrap gap-1">
-                        {c.properties.map((p) => (
-                          <span key={p} className={`text-xs px-1.5 py-0.5 rounded-md font-medium ${propertyColors[p]}`}>{p.split(" ")[0]}</span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex flex-wrap gap-1">
-                        {c.tags.map((t) => (
-                          <span key={t} className={`text-xs px-2 py-0.5 rounded-full font-medium ${tagColors[t]}`}>{t}</span>
-                        ))}
-                        {c.tags.length === 0 && <span className="text-xs text-gray-500">—</span>}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-gray-400 text-sm">{c.lastVisit}</td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-1 text-gray-300 text-sm">
-                        <RotateCcw className="w-3 h-3 text-purple-400" /> {c.visits}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {loading ? (
+          <div className="text-center py-20 text-gray-500">
+            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3 opacity-40" />
+            <p className="text-sm">Loading CRM data from Supabase...</p>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div className="lg:col-span-2 bg-gray-800/60 border border-gray-700/50 rounded-2xl overflow-hidden">
+              {activeTab === "guests" ? (
+                filteredGuests.length === 0 ? (
+                  <div className="text-center py-16 text-gray-500">
+                    <Users className="w-8 h-8 mx-auto mb-3 opacity-40" />
+                    <p className="text-sm">No guests yet — bookings will appear here automatically.</p>
+                  </div>
+                ) : (
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-700/50">
+                        {["Guest", "Property", "Last Visit", "Contact"].map((h) => (
+                          <th key={h} className="text-left text-gray-400 text-xs font-semibold uppercase tracking-wide py-3 px-4">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-700/30">
+                      {filteredGuests.map((g) => (
+                        <tr key={g.id} onClick={() => setSelected(g)} className={`cursor-pointer hover:bg-gray-700/30 transition-all ${selected?.id === g.id ? "bg-purple-600/10" : ""}`}>
+                          <td className="py-3 px-4">
+                            <div className="font-medium text-white text-sm">{g.name}</div>
+                            <div className="text-gray-500 text-xs">{g.email || "—"}</div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`text-xs px-2 py-0.5 rounded-md font-medium ${propertyColor[g.property] || "bg-gray-700 text-gray-300"}`}>
+                              {propertyLabel[g.property] || g.property}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-gray-400 text-sm">{g.last_visit || "—"}</td>
+                          <td className="py-3 px-4 text-gray-400 text-sm">{g.phone || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )
+              ) : (
+                filteredBookings.length === 0 ? (
+                  <div className="text-center py-16 text-gray-500">
+                    <Calendar className="w-8 h-8 mx-auto mb-3 opacity-40" />
+                    <p className="text-sm">No bookings yet. They&apos;ll appear here when guests book.</p>
+                  </div>
+                ) : (
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-700/50">
+                        {["Ref", "Guest", "Property", "Room", "Dates", "Amount", "Status"].map((h) => (
+                          <th key={h} className="text-left text-gray-400 text-xs font-semibold uppercase tracking-wide py-3 px-4">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-700/30">
+                      {filteredBookings.map((b) => (
+                        <tr key={b.id} className="hover:bg-gray-700/30">
+                          <td className="py-3 px-4 text-purple-400 text-xs font-mono">{b.ref}</td>
+                          <td className="py-3 px-4">
+                            <div className="font-medium text-white text-sm">{b.guest_name}</div>
+                            <div className="text-gray-500 text-xs">{b.guest_phone}</div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`text-xs px-2 py-0.5 rounded-md font-medium ${propertyColor[b.property] || "bg-gray-700 text-gray-300"}`}>
+                              {propertyLabel[b.property] || b.property}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-gray-300 text-sm">{b.room_name}</td>
+                          <td className="py-3 px-4 text-gray-400 text-xs">{b.checkin} → {b.checkout}</td>
+                          <td className="py-3 px-4 text-green-400 text-sm font-semibold">₹{b.amount?.toLocaleString("en-IN")}</td>
+                          <td className="py-3 px-4">
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${b.status === "confirmed" ? "bg-green-500/20 text-green-400" : b.status === "cancelled" ? "bg-red-500/20 text-red-400" : "bg-gray-500/20 text-gray-400"}`}>
+                              {b.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )
+              )}
+            </div>
 
-          {/* Customer profile */}
-          <div>
-            {selected ? (
-              <div className="bg-gray-800/60 border border-gray-700/50 rounded-2xl p-5 sticky top-6">
-                <div className="text-center mb-5">
-                  <div className="w-14 h-14 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-3 text-purple-300 font-bold text-xl">
-                    {selected.name.split(" ").map((n) => n[0]).join("")}
+            {/* Profile Panel */}
+            <div>
+              {selected ? (
+                <div className="bg-gray-800/60 border border-gray-700/50 rounded-2xl p-5 sticky top-6 space-y-4">
+                  <div className="text-center">
+                    <div className="w-14 h-14 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-3 text-purple-300 font-bold text-xl">
+                      {selected.name?.split(" ").map((n: string) => n[0]).join("") || "?"}
+                    </div>
+                    <div className="text-white font-bold">{selected.name}</div>
+                    <span className={`text-xs px-2 py-0.5 rounded-md font-medium mt-1 inline-block ${propertyColor[selected.property] || "bg-gray-700 text-gray-300"}`}>
+                      {propertyLabel[selected.property] || selected.property}
+                    </span>
                   </div>
-                  <div className="text-white font-bold">{selected.name}</div>
-                  <div className="text-gray-400 text-sm">{selected.phone}</div>
-                  <div className="flex justify-center gap-1 mt-2">
-                    {selected.tags.map((t) => <span key={t} className={`text-xs px-2 py-0.5 rounded-full ${tagColors[t]}`}>{t}</span>)}
+                  <div className="space-y-2.5 text-sm">
+                    {selected.phone && <div className="flex items-center gap-2.5 text-gray-300"><Phone className="w-3.5 h-3.5 text-gray-500" /> {selected.phone}</div>}
+                    {selected.email && <div className="flex items-center gap-2.5 text-gray-300"><Mail className="w-3.5 h-3.5 text-gray-500" /> {selected.email}</div>}
+                    {selected.last_visit && <div className="flex items-center gap-2.5 text-gray-300"><Calendar className="w-3.5 h-3.5 text-gray-500" /> Last visit: {selected.last_visit}</div>}
+                  </div>
+                  {guestBookings.length > 0 && (
+                    <div>
+                      <div className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-2">Bookings ({guestBookings.length})</div>
+                      <div className="space-y-2">
+                        {guestBookings.map((b) => (
+                          <div key={b.id} className="bg-gray-700/40 rounded-lg p-3 text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-purple-400 font-mono">{b.ref}</span>
+                              <span className="text-green-400">₹{b.amount?.toLocaleString("en-IN")}</span>
+                            </div>
+                            <div className="text-gray-400 mt-1">{b.room_name} · {b.checkin} → {b.checkout}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="pt-3 border-t border-gray-700 space-y-2">
+                    <button className="w-full bg-purple-600 text-white text-xs font-bold py-2.5 rounded-xl hover:bg-purple-700 flex items-center justify-center gap-2">
+                      <Star className="w-3.5 h-3.5" /> Send Campaign
+                    </button>
+                    <textarea placeholder="Add internal note..." rows={3} className="w-full bg-gray-700 border border-gray-600 text-gray-300 text-xs rounded-xl p-3 focus:outline-none focus:border-purple-500 resize-none" />
+                    <button className="w-full border border-gray-600 text-gray-300 text-xs py-2 rounded-xl hover:bg-gray-700">Save Note</button>
                   </div>
                 </div>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between text-gray-300"><span className="text-gray-500">Total Visits</span><span className="font-bold text-white">{selected.visits}</span></div>
-                  <div className="flex justify-between text-gray-300"><span className="text-gray-500">Last Visit</span><span>{selected.lastVisit}</span></div>
-                  <div className="text-gray-500 mb-1">Properties Visited</div>
-                  {selected.properties.map((p) => (
-                    <div key={p} className={`px-3 py-2 rounded-lg text-xs font-medium ${propertyColors[p]}`}>{p}</div>
-                  ))}
+              ) : (
+                <div className="bg-gray-800/60 border border-gray-700/50 rounded-2xl p-8 text-center text-gray-500">
+                  <Users className="w-8 h-8 mx-auto mb-3 opacity-40" />
+                  <p className="text-sm">Select a guest to view profile & booking history</p>
+                  <p className="text-xs mt-2 text-gray-600">Data syncs live from Supabase</p>
                 </div>
-                <div className="mt-5 pt-4 border-t border-gray-700 space-y-2">
-                  <button className="w-full bg-purple-600 text-white text-xs font-bold py-2.5 rounded-xl hover:bg-purple-700 flex items-center justify-center gap-2">
-                    <Star className="w-3.5 h-3.5" /> Send Campaign
-                  </button>
-                  <textarea placeholder="Add internal note..." rows={3} className="w-full bg-gray-700 border border-gray-600 text-gray-300 text-xs rounded-xl p-3 focus:outline-none focus:border-purple-500 resize-none" />
-                  <button className="w-full border border-gray-600 text-gray-300 text-xs py-2 rounded-xl hover:bg-gray-700">Save Note</button>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-gray-800/60 border border-gray-700/50 rounded-2xl p-8 text-center text-gray-500">
-                <Users className="w-8 h-8 mx-auto mb-3 opacity-40" />
-                <p className="text-sm">Select a customer to view their profile</p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </main>
     </div>
   );

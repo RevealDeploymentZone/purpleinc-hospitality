@@ -105,7 +105,7 @@ function BookingContent() {
                 </div>
                 <div className="flex gap-3">
                   <button onClick={() => setStep(1)} className="flex-1 border border-gray-200 text-gray-600 font-semibold py-3 rounded-xl text-sm">Back</button>
-                  <button onClick={() => router.push("/riddhi/book/confirmation")} className="flex-1 bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-3 rounded-xl transition-colors">
+                  <button onClick={async () => { try { await fetch("/api/bookings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ property: "riddhi", room_name: room.name, room_slug: slug, guest_name: form.name, guest_phone: form.phone, guest_email: form.email, checkin, checkout, nights, amount: total, payment_method: payment, early_checkin: form.earlyCheckin, airport_pickup: form.airportPickup, special_requests: form.requests }) }); } catch {} router.push("/riddhi/book/confirmation"); }} className="flex-1 bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-3 rounded-xl transition-colors">
                     Pay {formatPrice(total)}
                   </button>
                 </div>

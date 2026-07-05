@@ -82,7 +82,7 @@ export default function ContactPage() {
                         onChange={(e) => setForm({ ...form, message: e.target.value })}
                         className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-400 resize-none" />
                     </div>
-                    <button onClick={() => setSubmitted(true)} disabled={!form.name || !form.email || !form.message}
+                    <button onClick={async () => { try { await fetch("/api/contacts", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({property:"heera", name:form.name, email:form.email, subject:"Contact Form", message:form.message}) }); } catch {} setSubmitted(true); }} disabled={!form.name || !form.email || !form.message}
                       className="w-full bg-amber-600 hover:bg-amber-700 disabled:bg-gray-300 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors">
                       <Send className="w-4 h-4" /> Send Message
                     </button>

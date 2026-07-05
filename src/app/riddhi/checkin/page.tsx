@@ -62,7 +62,7 @@ export default function RiddhiCheckinPage() {
             </label>
           </div>
 
-          <button onClick={() => form.consent && setSubmitted(true)} disabled={!form.consent}
+          <button onClick={async () => { if (!form.consent) return; try { await fetch("/api/checkins", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({property:"riddhi",guest_name:form.name,guest_phone:form.phone,guest_email:form.email,id_type:form.idType,consent:form.consent})}); } catch {} setSubmitted(true); }} disabled={!form.consent}
             className="w-full flex items-center justify-center gap-2 bg-indigo-700 hover:bg-indigo-800 disabled:bg-gray-200 disabled:text-gray-400 text-white font-bold py-3 rounded-xl transition-colors">
             <PenLine className="w-4 h-4" /> Submit Check-In
           </button>

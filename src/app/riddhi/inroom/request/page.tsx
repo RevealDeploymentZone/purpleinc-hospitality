@@ -42,7 +42,7 @@ export default function RiddhiServiceRequestPage() {
             <textarea rows={3} value={req} onChange={(e) => setReq(e.target.value)} placeholder="e.g. Please send an extra blanket to Room 304"
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-400 resize-none" />
           </div>
-          <button onClick={() => req && setSubmitted(true)} disabled={!req}
+          <button onClick={async () => { if (!req) return; try { await fetch("/api/service-requests", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({property:"riddhi",request_type:"general",description:req})}); } catch {} setSubmitted(true); }} disabled={!req}
             className="w-full bg-indigo-700 hover:bg-indigo-800 disabled:bg-gray-200 disabled:text-gray-400 text-white font-bold py-3 rounded-xl transition-colors">
             Send Request
           </button>

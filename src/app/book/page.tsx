@@ -32,8 +32,31 @@ function BookingContent() {
   const taxes = Math.round((subtotal + addonTotal - discount) * 0.12);
   const total = subtotal + addonTotal - discount + taxes;
 
-  const handlePay = () => {
-    router.push(`/book/confirmation?ref=HG${Date.now().toString().slice(-6)}&room=${roomId}&name=${encodeURIComponent(form.name)}&checkin=${checkIn}&checkout=${checkOut}&total=${total}`);
+  const handlePay = async () => {
+    const ref = `HG-${Date.now().toString().slice(-6)}`;
+    try {
+      await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          property: "heera",
+          room_name: room.name,
+          room_slug: roomId,
+          guest_name: form.name,
+          guest_phone: form.phone,
+          guest_email: form.email,
+          checkin: checkIn,
+          checkout: checkOut,
+          nights,
+          amount: total,
+          payment_method: payMethod,
+          early_checkin: addons.earlyCheckin,
+          airport_pickup: addons.airportPickup,
+          special_requests: form.requests,
+        }),
+      });
+    } catch {}
+    router.push(`/book/confirmation?ref=${ref}&room=${roomId}&name=${encodeURIComponent(form.name)}&checkin=${checkIn}&checkout=${checkOut}&total=${total}`);
   };
 
   return (

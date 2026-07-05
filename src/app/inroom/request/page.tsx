@@ -73,7 +73,7 @@ export default function ServiceRequestPage() {
             placeholder="Or describe what you need in detail..."
             className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400 resize-none mb-5" />
 
-          <button onClick={() => setSubmitted(true)} disabled={!desc}
+          <button onClick={async () => { try { await fetch("/api/service-requests", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({property:"heera",request_type:"general",description:desc})}); } catch {} setSubmitted(true); }} disabled={!desc}
             className="w-full bg-amber-600 hover:bg-amber-700 disabled:bg-gray-300 text-white font-bold py-3.5 rounded-xl transition-colors">
             Send Request
           </button>

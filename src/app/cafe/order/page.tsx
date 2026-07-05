@@ -15,7 +15,7 @@ const sampleCart = [
 
 export default function OrderPage() {
   const router = useRouter();
-  const [cart, setCart] = useState(sampleCart);
+  const [cart, setCart] = useState<typeof sampleCart>([]);
   const [promo, setPromo] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [pickupTime, setPickupTime] = useState("30");

@@ -4,7 +4,7 @@ import { CheckCircle, Upload, PenLine } from "lucide-react";
 
 export default function RiddhiCheckinPage() {
   const [submitted, setSubmitted] = useState(false);
-  const [form, setForm] = useState({ name: "Priya Agarwal", phone: "9876511100", email: "priya@email.com", idType: "aadhaar", consent: false });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", idType: "aadhaar", consent: false });
 
   if (submitted) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">

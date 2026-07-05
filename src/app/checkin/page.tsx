@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Crown, Upload, CheckCircle, Pen } from "lucide-react";
 
 export default function CheckInPage() {
-  const [form, setForm] = useState({ name: "Rahul Sharma", phone: "9876543210", email: "rahul@email.com", idType: "Aadhaar" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", idType: "Aadhaar" });
   const [idUploaded, setIdUploaded] = useState(false);
   const [signed, setSigned] = useState(false);
   const [submitted, setSubmitted] = useState(false);
